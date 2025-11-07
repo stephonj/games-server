@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>GamesOnGames API Server</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🎮</div>
+            <h1>GamesOnGames API Server</h1>
+        </header>
+
+        <main>
+            <section class="api-section">
+                <h2>Available API Endpoints</h2>
+                
+                <div class="endpoint">
+                    <h3>Get All Games</h3>
+                    <div class="endpoint-details">
+                        <p><strong>Endpoint:</strong> <code>/api/games</code></p>
+                        <p><strong>Method:</strong> GET</p>
+                        <p><strong>Description:</strong> Returns a list of all available games</p>
+                        <a href="/api/games" class="btn" target="_blank">View All Games</a>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <h3>Get Single Game</h3>
+                    <div class="endpoint-details">
+                        <p><strong>Endpoint:</strong> <code>/api/games/:id</code></p>
+                        <p><strong>Method:</strong> GET</p>
+                        <p><strong>Description:</strong> Returns a single game by ID</p>
+                        <div class="examples">
+                            <a href="/api/games/1" class="btn-small" target="_blank">Game ID: 1</a>
+                            <a href="/api/games/2" class="btn-small" target="_blank">Game ID: 2</a>
+                            <a href="/api/games/3" class="btn-small" target="_blank">Game ID: 3</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>About This API</h2>
+                <p>This server provides game data for the GamesOnGames React application. It includes information about video games across multiple platforms and genres.</p>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>8</h3>
+                        <p>Total Games</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>3</h3>
+                        <p>Genres</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>6</h3>
+                        <p>Platforms</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 GamesOnGames. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

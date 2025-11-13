@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
+const Joi = require("joi");
 const app = express();
 
 app.use(express.static("public"));
@@ -120,7 +121,60 @@ app.get("/api/games/:id", (req, res) => {
     }
 });
 
+app.post("/api/games", upload.single("img"), (req, res) => {
+  console.log("in post request");
+
+  const gameToValidate = {
+    title: req.body.title,
+    genre: req.body.genre,
+    price: req.body.price !== undefined ? Number(req.body.price) : req.body.price,
+    platform: req.body.platform,
+    release_date: req.body.release_date,
+    description: req.body.description,
+  };
+
+  const { error } = validateGame(gameToValidate);
+  if (error) {
+    // If multer stored a file and validation fails, consider removing file (optional).
+    console.log("Validation error:", error.details[0].message);
+    return res.status(400).send({ error: error.details[0].message });
+  }
+
+  // construct new game
+  const newId = games.length ? Math.max(...games.map(g => g._id)) + 1 : 1;
+  const game = {
+    _id: newId,
+    title: gameToValidate.title,
+    genre: gameToValidate.genre,
+    price: Number(gameToValidate.price),
+    platform: gameToValidate.platform,
+    release_date: gameToValidate.release_date,
+    description: gameToValidate.description,
+  };
+
+
+  if (req.file && req.file.filename) {
+    game.img_name = "images/" + req.file.filename;
+  }
+
+  games.push(game);
+  return res.status(201).send(game);
+});
+
+const validateGame = (g) => {
+  const schema = Joi.object({
+    title: Joi.string().min(3).required(),
+    genre: Joi.string().min(3).required(),
+    price: Joi.number().min(0).required(),
+    platform: Joi.string().min(1).required(),
+    release_date: Joi.string().min(4).required(),
+    description: Joi.string().min(10).required(),
+  });
+
+  return schema.validate(g, { abortEarly: false });
+};
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });

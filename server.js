@@ -103,13 +103,13 @@ let games = [
     }
 ];
 
-// API endpoint to get all games
+// GET all games
 app.get("/api/games/", (req, res) => {
     console.log("Fetching all games");
     res.send(games);
 });
 
-// API endpoint to get a single game by ID
+// GET single game by ID
 app.get("/api/games/:id", (req, res) => {
     const id = parseInt(req.params.id);
     const game = games.find(g => g._id === id);
@@ -121,60 +121,116 @@ app.get("/api/games/:id", (req, res) => {
     }
 });
 
+// POST - Add new game
 app.post("/api/games", upload.single("img"), (req, res) => {
-  console.log("in post request");
+    console.log("in post request");
 
-  const gameToValidate = {
-    title: req.body.title,
-    genre: req.body.genre,
-    price: req.body.price !== undefined ? Number(req.body.price) : req.body.price,
-    platform: req.body.platform,
-    release_date: req.body.release_date,
-    description: req.body.description,
-  };
+    const gameToValidate = {
+        title: req.body.title,
+        genre: req.body.genre,
+        price: req.body.price !== undefined ? Number(req.body.price) : req.body.price,
+        platform: req.body.platform,
+        release_date: req.body.release_date,
+        description: req.body.description,
+    };
 
-  const { error } = validateGame(gameToValidate);
-  if (error) {
-    // If multer stored a file and validation fails, consider removing file (optional).
-    console.log("Validation error:", error.details[0].message);
-    return res.status(400).send({ error: error.details[0].message });
-  }
+    const { error } = validateGame(gameToValidate);
+    if (error) {
+        console.log("Validation error:", error.details[0].message);
+        return res.status(400).send({ error: error.details[0].message });
+    }
 
-  // construct new game
-  const newId = games.length ? Math.max(...games.map(g => g._id)) + 1 : 1;
-  const game = {
-    _id: newId,
-    title: gameToValidate.title,
-    genre: gameToValidate.genre,
-    price: Number(gameToValidate.price),
-    platform: gameToValidate.platform,
-    release_date: gameToValidate.release_date,
-    description: gameToValidate.description,
-  };
+    const newId = games.length ? Math.max(...games.map(g => g._id)) + 1 : 1;
+    const game = {
+        _id: newId,
+        title: gameToValidate.title,
+        genre: gameToValidate.genre,
+        price: Number(gameToValidate.price),
+        platform: gameToValidate.platform,
+        release_date: gameToValidate.release_date,
+        description: gameToValidate.description,
+    };
 
+    if (req.file && req.file.filename) {
+        game.img_name = "images/" + req.file.filename;
+    }
 
-  if (req.file && req.file.filename) {
-    game.img_name = "images/" + req.file.filename;
-  }
-
-  games.push(game);
-  return res.status(201).send(game);
+    games.push(game);
+    return res.status(201).send(game);
 });
 
-const validateGame = (g) => {
-  const schema = Joi.object({
-    title: Joi.string().min(3).required(),
-    genre: Joi.string().min(3).required(),
-    price: Joi.number().min(0).required(),
-    platform: Joi.string().min(1).required(),
-    release_date: Joi.string().min(4).required(),
-    description: Joi.string().min(10).required(),
-  });
+// PUT - Edit a game
+app.put("/api/games/:id", upload.single("img"), (req, res) => {
+    console.log(`Editing game with ID: ${req.params.id}`);
+    
+    const game = games.find((g) => g._id === parseInt(req.params.id));
 
-  return schema.validate(g, { abortEarly: false });
+    if (!game) {
+        res.status(404).send("The game you wanted to edit is unavailable");
+        return;
+    }
+
+    const gameToValidate = {
+        title: req.body.title,
+        genre: req.body.genre,
+        price: req.body.price !== undefined ? Number(req.body.price) : req.body.price,
+        platform: req.body.platform,
+        release_date: req.body.release_date,
+        description: req.body.description,
+    };
+
+    const { error } = validateGame(gameToValidate);
+    if (error) {
+        console.log("Invalid Info");
+        res.status(400).send(error.details[0].message);
+        return;
+    }
+
+    game.title = req.body.title;
+    game.genre = req.body.genre;
+    game.price = parseFloat(req.body.price);
+    game.platform = req.body.platform;
+    game.release_date = req.body.release_date;
+    game.description = req.body.description;
+
+    if (req.file) {
+        game.img_name = "images/" + req.file.filename;
+    }
+
+    res.status(200).send(game);
+});
+
+// DELETE - Delete a game
+app.delete("/api/games/:id", (req, res) => {
+    console.log(`Deleting game with ID: ${req.params.id}`);
+    
+    const game = games.find((g) => g._id === parseInt(req.params.id));
+
+    if (!game) {
+        res.status(404).send("The game you wanted to delete is unavailable");
+        return;
+    }
+
+    const index = games.indexOf(game);
+    games.splice(index, 1);
+    res.status(200).send(game);
+});
+
+// Validation function
+const validateGame = (g) => {
+    const schema = Joi.object({
+        title: Joi.string().min(3).required(),
+        genre: Joi.string().min(3).required(),
+        price: Joi.number().min(0).required(),
+        platform: Joi.string().min(1).required(),
+        release_date: Joi.string().min(4).required(),
+        description: Joi.string().min(10).required(),
+    });
+
+    return schema.validate(g, { abortEarly: false });
 };
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });

@@ -216,7 +216,7 @@ app.delete("/api/games/:id", (req, res) => {
     res.status(200).send(game);
 });
 
-// Validation function
+// Validation 
 const validateGame = (g) => {
     const schema = Joi.object({
         title: Joi.string().min(3).required(),

@@ -20,11 +20,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 mongoose
-  .connect(
-    "mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/games?retryWrites=true&w=majority"
-  )
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log("MongoDB Error:", err));
+  .connect("mongodb+srv://stephonj_db_user:86tSoR3pdcQRedDK@cluster0.cmobtcd.mongodb.net/")
+  .then(() => {
+    console.log("connected to mongodb");
+  })
+  .catch((error) => {
+    console.log("couldn't connect to mongodb", error);
+  });
 
 // SCHEMA
 const gameSchema = new mongoose.Schema({

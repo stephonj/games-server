@@ -20,12 +20,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 mongoose
-  .connect("mongodb+srv://stephonj_db_user:86tSoR3pdcQRedDK@cluster0.cmobtcd.mongodb.net/")
+  .connect(
+    "mongodb+srv://stephonj_db_user:86tSoR3pdcQRedDK@cluster0.cmobtcd.mongodb.net/gamesdb?retryWrites=true&w=majority"
+  )
   .then(() => {
-    console.log("connected to mongodb");
+    console.log(" Connected to MongoDB");
   })
   .catch((error) => {
-    console.log("couldn't connect to mongodb", error);
+    console.log(" Couldn't connect to MongoDB", error);
   });
 
 // SCHEMA
@@ -44,6 +46,7 @@ const Game = mongoose.model("Game", gameSchema);
 // VALIDATION
 const validateGame = (g) => {
   const schema = Joi.object({
+    _id: Joi.allow(""), 
     title: Joi.string().min(3).required(),
     genre: Joi.string().min(3).required(),
     price: Joi.number().min(0).required(),
@@ -59,8 +62,10 @@ const validateGame = (g) => {
 app.get("/api/games", async (req, res) => {
   try {
     const games = await Game.find();
+    console.log(`Fetched ${games.length} games from database`);
     res.send(games);
   } catch (err) {
+    console.error("Error fetching games:", err);
     res.status(500).send("Error fetching games");
   }
 });
@@ -69,15 +74,22 @@ app.get("/api/games", async (req, res) => {
 app.get("/api/games/:id", async (req, res) => {
   try {
     const game = await Game.findById(req.params.id);
-    if (!game) return res.status(404).send("Game not found");
+    if (!game) {
+      console.log(`Game with ID ${req.params.id} not found`);
+      return res.status(404).send("Game not found");
+    }
     res.send(game);
   } catch (err) {
+    console.error("Error fetching game:", err);
     res.status(500).send("Error fetching game");
   }
 });
 
 // POST — ADD GAME
 app.post("/api/games", upload.single("img"), async (req, res) => {
+  console.log("POST request received");
+  console.log("Request body:", req.body);
+
   const gameToValidate = {
     title: req.body.title,
     genre: req.body.genre,
@@ -88,24 +100,32 @@ app.post("/api/games", upload.single("img"), async (req, res) => {
   };
 
   const { error } = validateGame(gameToValidate);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) {
+    console.log("Validation error:", error.details[0].message);
+    return res.status(400).send(error.details[0].message);
+  }
 
   const game = new Game(gameToValidate);
 
   if (req.file) {
     game.img_name = "images/" + req.file.filename;
+    console.log("Image uploaded:", req.file.filename);
   }
 
   try {
     const savedGame = await game.save();
+    console.log("✅ Game saved to database:", savedGame._id);
     res.status(201).send(savedGame);
   } catch (err) {
+    console.error("Error saving game:", err);
     res.status(500).send("Error saving game");
   }
 });
 
 // PUT — EDIT GAME
 app.put("/api/games/:id", upload.single("img"), async (req, res) => {
+  console.log(`PUT request for game ID: ${req.params.id}`);
+
   const gameToValidate = {
     title: req.body.title,
     genre: req.body.genre,
@@ -116,40 +136,59 @@ app.put("/api/games/:id", upload.single("img"), async (req, res) => {
   };
 
   const { error } = validateGame(gameToValidate);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) {
+    console.log("Validation error:", error.details[0].message);
+    return res.status(400).send(error.details[0].message);
+  }
 
   const fieldsToUpdate = { ...gameToValidate };
 
   if (req.file) {
     fieldsToUpdate.img_name = "images/" + req.file.filename;
+    console.log("New image uploaded:", req.file.filename);
   }
 
   try {
     const updatedGame = await Game.findByIdAndUpdate(
       req.params.id,
       fieldsToUpdate,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
-    if (!updatedGame) return res.status(404).send("Game not found");
+    if (!updatedGame) {
+      console.log(`Game with ID ${req.params.id} not found`);
+      return res.status(404).send("Game not found");
+    }
+
+    console.log("✅ Game updated:", updatedGame._id);
     res.send(updatedGame);
   } catch (err) {
+    console.error("Error updating game:", err);
     res.status(500).send("Error updating game");
   }
 });
 
 // DELETE — REMOVE GAME
 app.delete("/api/games/:id", async (req, res) => {
+  console.log(`DELETE request for game ID: ${req.params.id}`);
+
   try {
     const deletedGame = await Game.findByIdAndDelete(req.params.id);
 
-    if (!deletedGame) return res.status(404).send("Game not found");
+    if (!deletedGame) {
+      console.log(`Game with ID ${req.params.id} not found`);
+      return res.status(404).send("Game not found");
+    }
 
+    console.log("✅ Game deleted:", deletedGame._id);
     res.send(deletedGame);
   } catch (err) {
+    console.error("Error deleting game:", err);
     res.status(500).send("Error deleting game");
   }
 });
 
 const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => {
+  console.log(` Server running on port ${port}`);
+});

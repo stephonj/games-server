@@ -20,14 +20,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 mongoose
-  .connect(
-    "mongodb+srv://stephonj_db_user:86tSoR3pdcQRedDK@cluster0.cmobtcd.mongodb.net/gamesdb?retryWrites=true&w=majority"
-  )
+  .connect("mongodb+srv://stephonj_db_user:86tSoR3pdcQRedDK@cluster0.cmobtcd.mongodb.net/")
   .then(() => {
-    console.log(" Connected to MongoDB");
+    console.log("connected to mongodb");
   })
   .catch((error) => {
-    console.log(" Couldn't connect to MongoDB", error);
+    console.log("couldn't connect to mongodb", error);
   });
 
 // SCHEMA
@@ -188,7 +186,6 @@ app.delete("/api/games/:id", async (req, res) => {
   }
 });
 
-const port = process.env.PORT || 3001;
-app.listen(port, () => {
-  console.log(` Server running on port ${port}`);
+app.listen(3001, ()=>{
+    console.log("I'm listening...");
 });
